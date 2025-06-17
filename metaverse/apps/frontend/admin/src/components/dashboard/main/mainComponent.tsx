@@ -24,7 +24,7 @@ export function MainComponent() {
 
         const data = await res.json();
         console.log("maps", data);
-        setMaps(data);
+        setMaps(Array.isArray(data) ? data : data.maps ?? []);
     }
 
     async function getElements() {

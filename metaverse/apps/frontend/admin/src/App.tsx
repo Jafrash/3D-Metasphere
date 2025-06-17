@@ -3,6 +3,8 @@ import { SpaceManagement } from './pages/SpaceManagement'
 import { ElementManagement } from './pages/ElementManagement'
 import { UserManagement } from './pages/UserManagement'
 import { Dashboard } from './components/dashboard/dashboard'
+import { AuthPage } from './components/auth/page'
+
 import './index.css'
 
 function App() {
@@ -21,6 +23,8 @@ function App() {
       </nav>
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Routes>
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/signup" element={<AuthPage signup />} />
           <Route path="/" element={<Dashboard />} />
           <Route path="/spaces" element={<SpaceManagement />} />
           <Route path="/elements" element={<ElementManagement />} />
