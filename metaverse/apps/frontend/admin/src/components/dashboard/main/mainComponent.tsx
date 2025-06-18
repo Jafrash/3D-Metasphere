@@ -10,27 +10,47 @@ export function MainComponent() {
     const [avatars, setAvatars] = useState<AvatarInterface[]>([]);
     const navigate = useNavigate();
 
+    useEffect(() => {
+        getMaps();
+        getElements();
+        getAvatars();
+    }, []);
+
     async function getMaps() {
         const token = localStorage.getItem("token");
         if (!token) {
-            alert("You need to login first");
+            navigate("/login", { replace: true });
             return;
         }
-        const res = await fetch(`${BACKEND_URL}/admin/map`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
+        try {
+            const res = await fetch(`${BACKEND_URL}/admin/map`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
 
-        const data = await res.json();
-        console.log("maps", data);
-        setMaps(Array.isArray(data) ? data : data.maps ?? []);
+            if (!res.ok) {
+                if (res.status === 403) {
+                    localStorage.removeItem("token");
+                    navigate("/login", { replace: true });
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const data = await res.json();
+            console.log("maps", data);
+            setMaps(Array.isArray(data) ? data : data.maps ?? []);
+        } catch (error) {
+            console.error("Error fetching maps:", error);
+            // Handle error appropriately
+        }
     }
 
     async function getElements() {
         const token = localStorage.getItem("token");
         if (!token) {
-            alert("You need to login first");
+            navigate("/login", { replace: true });
             return;
         }
         const res = await fetch(`${BACKEND_URL}/elements`);
@@ -43,7 +63,7 @@ export function MainComponent() {
     async function getAvatars() {
         const token = localStorage.getItem("token");
         if (!token) {
-            alert("You need to login first");
+            navigate("/login", { replace: true });
             return;
         }
         const res = await fetch(`${BACKEND_URL}/avatars`);
