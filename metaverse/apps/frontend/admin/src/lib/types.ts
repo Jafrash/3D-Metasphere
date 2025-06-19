@@ -6,6 +6,8 @@ export interface ElementInterface {
     width: number;
     height: number;
     static: boolean;
+    x?: number;
+    y?: number;
 }
 
 // Element with position information
