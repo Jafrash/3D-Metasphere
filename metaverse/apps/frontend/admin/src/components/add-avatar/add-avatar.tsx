@@ -3,15 +3,42 @@ import { BACKEND_URL } from "../../lib/config"
 
 export function CreateAvatar() {
     const [name, setName] = useState("");
-    const [imageUrl, setImageUrl] = useState("");
+    const [imageFile, setImageFile] = useState<File | null>(null);
+
+    async function handleImageUpload(file: File) {
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (e.target?.result) {
+                    resolve(e.target.result as string);
+                }
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
 
     async function handleSubmit() {
-        if (!name || !imageUrl) {
+        if (!name || !imageFile) {
             alert("Please fill in all the fields");
             return;
         }
 
         try {
+            const base64Image = await handleImageUpload(imageFile);
+            const trimmedName = name.trim();
+            
+            if (trimmedName === '') {
+                alert("Please enter a valid name");
+                return;
+            }
+
+            // Validate base64 image
+            if (!base64Image.startsWith('data:image/')) {
+                alert('Invalid image format. Please select a valid image file.');
+                return;
+            }
+
             const response = await fetch(`${BACKEND_URL}/admin/avatar`, {
                 method: "POST",
                 headers: {
@@ -19,16 +46,29 @@ export function CreateAvatar() {
                     "Authorization": `Bearer ${localStorage.getItem("token")}`,
                 },
                 body: JSON.stringify({
-                    name,
-                    imageUrl,
+                    name: trimmedName,
+                    base64Image,
                 }),
             });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to create avatar');
+            }
+            
             const data = await response.json();
             console.log(data);
-            alert("Element created successfully");
+            alert("Avatar created successfully");
+            // Reset form after successful submission
+            setName("");
+            setImageFile(null);
         } catch (error) {
-            console.error("Failed to create element:", error);
-            alert("Failed to create element");
+            console.error("Failed to create avatar:", error);
+            if (error instanceof Error) {
+                alert(error.message);
+            } else {
+                alert("Failed to create avatar");
+            }
         }
     }
 
@@ -57,19 +97,33 @@ export function CreateAvatar() {
                         />
                     </div>
 
-                    {/* Image URL */}
+                    {/* Image Upload */}
                     <div className="flex flex-col space-y-2">
-                        <label htmlFor="imageUrl" className="text-sm font-medium text-gray-700">
-                            Image URL
+                        <label htmlFor="image-upload" className="text-sm font-medium text-gray-700">
+                            Upload Avatar Image
                         </label>
                         <input
-                            id="imageUrl"
-                            type="text"
-                            placeholder="https://example.com/image.jpg"
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            className="border px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            id="image-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                    setImageFile(e.target.files[0]);
+                                }
+                            }}
+                            className="hidden"
                         />
+                        <label
+                            htmlFor="image-upload"
+                            className="cursor-pointer border px-3 py-2 rounded-md shadow-sm bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                        >
+                            Choose Image
+                        </label>
+                        {imageFile && (
+                            <div className="mt-2 text-sm text-gray-500">
+                                Selected: {imageFile.name}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

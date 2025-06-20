@@ -5,11 +5,11 @@ import { BACKEND_URL } from "@/lib/config";
 
 interface MapEditorProps {
   name: string;
-  thumbnail: string;
+  thumbnailFile?: File;
   dimension: string;
 }
 
-export function MapEditor({ name, thumbnail, dimension = '800x600' }: MapEditorProps) {
+export function MapEditor({ name, thumbnailFile, dimension = '800x600' }: MapEditorProps) {
   if (!dimension || typeof dimension !== 'string' || !dimension.includes('x')) {
     console.error('Invalid dimension format:', dimension);
     return null;
@@ -18,7 +18,20 @@ export function MapEditor({ name, thumbnail, dimension = '800x600' }: MapEditorP
   const [isEditMode, setIsEditMode] = useState(false);
   const [elements, setElements] = useState<ElementWithPositionInterface[]>([]);
   const [availableElements, setAvailableElements] = useState<ElementInterface[]>([]);
+  const [base64Thumbnail, setBase64Thumbnail] = useState<string>('');
   const gameRef = useRef<Phaser.Game | null>(null);
+
+  useEffect(() => {
+    if (thumbnailFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setBase64Thumbnail(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(thumbnailFile);
+    }
+  }, [thumbnailFile]);
 
   // Calculate game dimensions from props
   const [gameWidth, gameHeight] = useMemo(() => {
@@ -60,8 +73,14 @@ export function MapEditor({ name, thumbnail, dimension = '800x600' }: MapEditorP
   async function createMap() {
     try {
       // Validate inputs
-      if (!name || name.trim() === '') {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
         throw new Error('Map name is required');
+      }
+
+      // Validate thumbnail
+      if (!base64Thumbnail) {
+        throw new Error('Thumbnail image is required');
       }
 
       // Parse dimension
@@ -82,13 +101,14 @@ export function MapEditor({ name, thumbnail, dimension = '800x600' }: MapEditorP
 
       // Format the request data
       const mapData = {
-        name: name.trim(),
-        thumbnail,
+        name: trimmedName,
+        base64Thumbnail,
+        thumbnail: '', // Keep the old thumbnail field empty
         dimension,
         defaultElements: elements.map((element) => ({
           elementId: element.id,
           x: Math.floor(element.x / 32) * 32, // Snap to grid
-          y: Math.floor(element.y / 32) * 32,
+          y: Math.floor(element.y / 32),
           static: element.static || false
         }))
       };
@@ -195,6 +215,11 @@ export function MapEditor({ name, thumbnail, dimension = '800x600' }: MapEditorP
               });
             }
           });
+
+          // Load thumbnail if available
+          if (base64Thumbnail) {
+            this.load.image('thumbnail', base64Thumbnail);
+          }
         } catch (error) {
           console.error('Error loading assets:', error);
         }

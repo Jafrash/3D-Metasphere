@@ -3,7 +3,7 @@ import { MapEditor } from "./mapEditor";
 
 export function CreateMap() {
     const [name, setName] = useState("");
-    const [thumbnail, setThumbnail] = useState("");
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
     const [dimension, setDimension] = useState("");
 
     return (
@@ -30,18 +30,33 @@ export function CreateMap() {
                         />
                     </div>
 
-                    {/* Thumbnail */}
+                    {/* Thumbnail Upload */}
                     <div className="flex flex-col space-y-2">
-                        <label htmlFor="thumbnail" className="text-sm font-medium text-gray-700">
-                            Thumbnail
+                        <label htmlFor="thumbnail-upload" className="text-sm font-medium text-gray-700">
+                            Upload Thumbnail
                         </label>
                         <input
-                            id="thumbnail"
-                            placeholder="https://example.com/image.jpg"
-                            value={thumbnail}
-                            onChange={(e) => setThumbnail(e.target.value)}
-                            className="border px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            id="thumbnail-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                    setThumbnailFile(e.target.files[0]);
+                                }
+                            }}
+                            className="hidden"
                         />
+                        <label
+                            htmlFor="thumbnail-upload"
+                            className="cursor-pointer border px-3 py-2 rounded-md shadow-sm bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                        >
+                            Choose Image
+                        </label>
+                        {thumbnailFile && (
+                            <div className="mt-2 text-sm text-gray-500">
+                                Selected: {thumbnailFile.name}
+                            </div>
+                        )}
                     </div>
 
                     {/* Dimension */}
@@ -60,16 +75,16 @@ export function CreateMap() {
                 </div>
 
                 {/* Validation message */}
-                {(!name || !thumbnail || !dimension) && (
+                {(!name || !thumbnailFile || !dimension) && (
                     <p className="text-red-500 text-sm mt-4">
                         Please fill in all the fields
                     </p>
                 )}
 
                 {/* Map Editor Preview */}
-                {name && thumbnail && dimension && (
+                {name && thumbnailFile && dimension && (
                     <div className="mt-6">
-                        <MapEditor name={name} thumbnail={thumbnail} dimension={dimension} />
+                        <MapEditor name={name} thumbnailFile={thumbnailFile} dimension={dimension} />
                     </div>
                 )}
             </div>

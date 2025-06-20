@@ -6,15 +6,37 @@ export function CreateElement() {
     const [width, setWidth] = useState("");
     const [height, setHeight] = useState("");
     const [isStatic, setIsStatic] = useState(false);
-    const [imageUrl, setImageUrl] = useState("");
+    const [imageFile, setImageFile] = useState<File | null>(null);
+
+    async function handleImageUpload(file: File) {
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (e.target?.result) {
+                    resolve(e.target.result as string);
+                }
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
 
     async function handleSubmit() {
-        if (!name || !width || !height || !imageUrl) {
+        if (!name || !width || !height || !imageFile) {
             alert("Please fill in all the fields");
             return;
         }
 
         try {
+            const base64Image = await handleImageUpload(imageFile);
+            const elementWidth = parseInt(width);
+            const elementHeight = parseInt(height);
+            
+            if (isNaN(elementWidth) || elementWidth <= 0 || isNaN(elementHeight) || elementHeight <= 0) {
+                alert("Please enter valid dimensions (greater than 0)");
+                return;
+            }
+
             const response = await fetch(`${BACKEND_URL}/admin/element`, {
                 method: "POST",
                 headers: {
@@ -23,18 +45,34 @@ export function CreateElement() {
                 },
                 body: JSON.stringify({
                     name,
-                    width: parseInt(width),
-                    height: parseInt(height),
+                    width: elementWidth,
+                    height: elementHeight,
                     static: isStatic,
-                    imageUrl,
+                    base64Image,
                 }),
             });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to create element');
+            }
+            
             const data = await response.json();
             console.log(data);
             alert("Element created successfully");
+            // Reset form after successful submission
+            setName("");
+            setWidth("");
+            setHeight("");
+            setIsStatic(false);
+            setImageFile(null);
         } catch (error) {
             console.error("Failed to create element:", error);
-            alert("Failed to create element");
+            if (error instanceof Error) {
+                alert(error.message);
+            } else {
+                alert("Failed to create element");
+            }
         }
     }
 
@@ -99,19 +137,33 @@ export function CreateElement() {
                                     </div>
 
                                     <div>
-                                        <label htmlFor="imageUrl" className="text-sm font-medium text-gray-700">
-                                            Image URL
+                                        <label htmlFor="image-upload" className="text-sm font-medium text-gray-700">
+                                            Upload Element Image
                                         </label>
-                                        <input
-                                            id="imageUrl"
-                                            type="text"
-                                            placeholder="https://example.com/image.jpg"
-                                            value={imageUrl}
-                                            onChange={(e) => setImageUrl(e.target.value)}
-                                            required
-                                            autoComplete="element-image-url"
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                        />
+                                        <div className="mt-1 flex items-center">
+                                            <input
+                                                id="image-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    if (e.target.files && e.target.files[0]) {
+                                                        setImageFile(e.target.files[0]);
+                                                    }
+                                                }}
+                                                className="hidden"
+                                            />
+                                            <label
+                                                htmlFor="image-upload"
+                                                className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+                                            >
+                                                Choose Image
+                                            </label>
+                                            {imageFile && (
+                                                <span className="ml-4 text-sm text-gray-500">
+                                                    {imageFile.name}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="flex items-center">
