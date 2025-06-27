@@ -1,10 +1,10 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import client from "@repo/db/client";
 import { userMiddleware } from "../../middleware/user";
 import { AddElementSchema, CreateElementSchema, CreateSpaceSchema, DeleteElementSchema } from "../../types";
 export const spaceRouter = Router();
 
-spaceRouter.post("/", userMiddleware, async (req, res) => {
+spaceRouter.post("/", userMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     console.log("endopibnt")
     const parsedData = CreateSpaceSchema.safeParse(req.body)
     if (!parsedData.success) {

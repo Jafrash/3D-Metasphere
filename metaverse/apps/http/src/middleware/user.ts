@@ -4,8 +4,14 @@ import { JWT_PASSWORD } from "../config";
 import { NextFunction, Request, Response } from "express";
 
 export const userMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    // Try to get token from Authorization header first
     const header = req.headers["authorization"];
-    const token = header?.split(" ")[1];
+    const token = header?.split(" ")[1] || header;  // Also allow raw token in header
+    
+    // If no token in header, try to get it from the request body
+    if (!token && req.body && typeof req.body === 'object') {
+        token = req.body.token;
+    }
     console.log(req.route.path)
         console.log(token)
     

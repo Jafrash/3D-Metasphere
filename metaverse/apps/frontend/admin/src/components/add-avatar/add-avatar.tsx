@@ -33,12 +33,6 @@ export function CreateAvatar() {
                 return;
             }
 
-            // Validate base64 image
-            if (!base64Image.startsWith('data:image/')) {
-                alert('Invalid image format. Please select a valid image file.');
-                return;
-            }
-
             const response = await fetch(`${BACKEND_URL}/admin/avatar`, {
                 method: "POST",
                 headers: {

@@ -17,7 +17,16 @@ export const UpdateMetadataSchema = z.object({
 
 export const CreateSpaceSchema = z.object({
     name: z.string(),
-    dimensions: z.string().regex(/^[0-9]{1,4}x[0-9]{1,4}$/),
+    dimensions: z.string().transform((val) => {
+        if (val.includes('x')) {
+            const [width, height] = val.split('x').map(Number);
+            if (isNaN(width) || isNaN(height)) throw new Error('Invalid dimensions format');
+            return val;
+        }
+        const num = Number(val);
+        if (isNaN(num)) throw new Error('Invalid dimensions format');
+        return `${num}x${num}`;
+    }),
     mapId: z.string().optional(),
 })
 

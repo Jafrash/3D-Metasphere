@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { adminMiddleware } from "../../middleware/admin";
 import { AddElementSchema, CreateAvatarSchema, CreateElementSchema, CreateMapSchema, GetMapviaIdSchema, UpdateElementSchema, UpdateMapSchema } from "../../types";
 import client from "@repo/db/client";
@@ -6,18 +6,22 @@ import { userMiddleware } from "../../middleware/user";
 export const adminRouter = Router();
 adminRouter.use(adminMiddleware)
 
-adminRouter.post("/element", async (req, res) => {
+adminRouter.post("/element", async (req: Request, res: Response, next: NextFunction) => {
     const parsedData = CreateElementSchema.safeParse(req.body)
     if (!parsedData.success) {
         res.status(400).json({message: "Validation failed"})
         return
     }
 
-    let imageUrl = parsedData.data.imageUrl;
+    let imageUrl = parsedData.data.imageUrl || '';
     if (parsedData.data.base64Image) {
         // Store the base64 image in a suitable storage (e.g., database or file system)
         // For now, we'll just use the base64 string as the imageUrl
         imageUrl = parsedData.data.base64Image;
+    }
+    if (!imageUrl) {
+        res.status(400).json({ message: "Image URL is required" });
+        return;
     }
 
     const element = await client.element.create({
@@ -58,10 +62,17 @@ adminRouter.post("/avatar", async (req, res) => {
         return
     }
 
+    let imageUrl = parsedData.data.imageUrl;
+    if (parsedData.data.base64Image) {
+        // Store the base64 image in a suitable storage (e.g., database or file system)
+        // For now, we'll just use the base64 string as the imageUrl
+        imageUrl = parsedData.data.base64Image;
+    }
+
     const avatar = await client.avatar.create({
         data: {
             name: parsedData.data.name,
-            imageUrl: parsedData.data.base64Image || parsedData.data.imageUrl
+            imageUrl: imageUrl
         }
     })
     res.json({avatarId: avatar.id})
@@ -147,7 +158,7 @@ adminRouter.put(`/map/:id`, adminMiddleware, async (req, res) => {
 });
 
 
-adminRouter.get(`/map`, userMiddleware, async (req, res) => {
+adminRouter.get(`/map`, userMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     const maps = await client.map.findMany({
         include: {
             mapElements: {

@@ -1,11 +1,11 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { UpdateMetadataSchema } from "../../types";
 import client from "@repo/db/client";
 import { userMiddleware } from "../../middleware/user";
 
 export const userRouter = Router();
 
-userRouter.post("/metadata", userMiddleware, async (req, res) => {
+userRouter.post("/metadata", userMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     const parsedData = UpdateMetadataSchema.safeParse(req.body)       
     if (!parsedData.success) {
         console.log("parsed data incorrect")

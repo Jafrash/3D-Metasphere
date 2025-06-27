@@ -1,23 +1,15 @@
-import React, { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { Game } from './pages/Game'
-import { Login } from './pages/Login'
-import { Register } from './pages/Register'
-import { useAuth } from './lib/auth'
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { AuthPage } from './components/auth/page'
 
 function App() {
-  const { isAuthenticated } = useAuth()
-
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-gray-100">
-        <Routes>
-          <Route path="/" element={<Game />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <Router>
+      <Routes>
+        <Route path="/" element={<AuthPage signup={false} />} />
+        <Route path="/signup" element={<AuthPage signup={true} />} />
+      </Routes>
+    </Router>
   )
 }
 

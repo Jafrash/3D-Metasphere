@@ -84,7 +84,7 @@ export function CreateMap() {
                 {/* Map Editor Preview */}
                 {name && thumbnailFile && dimension && (
                     <div className="mt-6">
-                        <MapEditor name={name} thumbnailFile={thumbnailFile} dimension={dimension} />
+                        <MapEditor name={name} thumbnailFile={thumbnailFile} dimensions={dimension} />
                     </div>
                 )}
             </div>
