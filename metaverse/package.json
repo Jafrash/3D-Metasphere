@@ -8,6 +8,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@vitejs/plugin-react": "^4.2.1",
     "prettier": "^3.2.5",
     "turbo": "^2.3.3",
