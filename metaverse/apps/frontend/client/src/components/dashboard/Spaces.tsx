@@ -1,6 +1,6 @@
 import { BACKEND_URL } from '../../lib/config';
 import { useEffect, useState } from 'react';
-import { SpaceCardProps } from '../../lib/types';
+import { SpaceCardProps } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
 export default function Spaces() {

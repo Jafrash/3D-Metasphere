@@ -14,8 +14,22 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "./src",
+    "paths": {
+      "react-router-dom": ["node_modules/react-router-dom/dist/index.js"]
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   },
   "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "**/node_modules/*"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
