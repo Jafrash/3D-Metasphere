@@ -9,20 +9,36 @@ interface MapEditorProps {
   dimensions: string;
 }
 
-export function MapEditor({ name, thumbnailFile, dimensions = "800x600" }: MapEditorProps) {
+const DEFAULT_DIMENSIONS = { width: 800, height: 600 };
+
+export function MapEditor({ name, thumbnailFile, dimensions }: MapEditorProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [elements, setElements] = useState<ElementWithPositionInterface[]>([]);
   const [availableElements, setAvailableElements] = useState<ElementInterface[]>([]);
   const [base64Thumbnail, setBase64Thumbnail] = useState<string>('');
+  const [dimensionError, setDimensionError] = useState<string | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
 
-  const [gameWidth, gameHeight] = useMemo(() => {
-    const [w, h] = dimensions.split("x").map(Number);
-    if (!w || !h || isNaN(w) || isNaN(h)) {
-      console.error("Invalid dimension format:", dimensions);
-      return [800, 600];
+  const { width: gameWidth, height: gameHeight } = useMemo(() => {
+    if (!dimensions || !dimensions.includes('x')) {
+      setDimensionError('Invalid dimension format. Please use format: WIDTHxHEIGHT (e.g., 800x600)');
+      return DEFAULT_DIMENSIONS;
     }
-    return [w, h];
+    
+    const [w, h] = dimensions.split('x').map(Number);
+    
+    if (isNaN(w) || isNaN(h) || w <= 0 || h <= 0) {
+      setDimensionError('Dimensions must be positive numbers');
+      return DEFAULT_DIMENSIONS;
+    }
+    
+    if (w > 2000 || h > 2000) {
+      setDimensionError('Maximum dimension size is 2000x2000');
+      return DEFAULT_DIMENSIONS;
+    }
+    
+    setDimensionError(null);
+    return { width: w, height: h };
   }, [dimensions]);
 
   useEffect(() => {
@@ -252,37 +268,48 @@ export function MapEditor({ name, thumbnailFile, dimensions = "800x600" }: MapEd
       console.error("Phaser init error:", err);
     }
 
-    return () => {
-      if (gameRef.current) {
-        gameRef.current.destroy(true);
-        gameRef.current = null;
-      }
-    };
-  }, [dimensions, isEditMode, elements, availableElements]);
+    }, [dimensions, isEditMode, elements, availableElements, base64Thumbnail]);
 
   return (
-    <div className="flex flex-col gap-4 mt-8 border-t pt-4">
-      <div className="flex justify-between items-center">
-        <button
-          onClick={() => setIsEditMode(!isEditMode)}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          {isEditMode ? "Exit Edit Mode" : "Enter Edit Mode"}
-        </button>
-        {isEditMode && (
+    <div className="w-full h-full flex flex-col">
+      {dimensionError && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+          <p className="font-bold">Invalid Dimensions</p>
+          <p>{dimensionError} Using default: {DEFAULT_DIMENSIONS.width}x{DEFAULT_DIMENSIONS.height}</p>
+        </div>
+      )}
+      
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-xl font-bold">{name}</h2>
+          <p className="text-sm text-gray-600">
+            Canvas: {gameWidth} x {gameHeight} px
+          </p>
+        </div>
+        <div className="flex space-x-2">
           <button
-            onClick={createMap}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={`px-4 py-2 rounded-md ${
+              isEditMode ? 'bg-gray-200' : 'bg-blue-500 text-white'
+            }`}
           >
-            Create Map
+            {isEditMode ? 'Exit Edit Mode' : 'Edit Mode'}
           </button>
-        )}
+          {isEditMode && (
+            <button
+              onClick={createMap}
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+            >
+              Save Map
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-4 flex-1">
         <div
           id="phaser-game"
-          className="col-span-3 bg-gray-100 rounded-lg overflow-hidden"
+          className="col-span-3 bg-gray-100 rounded-lg overflow-hidden border border-gray-300"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
@@ -300,9 +327,9 @@ export function MapEditor({ name, thumbnailFile, dimensions = "800x600" }: MapEd
         </div>
 
         {isEditMode && (
-          <div className="w-64 bg-gray-800 p-4 overflow-y-auto col-span-1 rounded-lg">
+          <div className="w-64 bg-gray-800 p-4 overflow-y-auto rounded-lg">
             <h2 className="text-xl font-bold text-white mb-4">Available Elements</h2>
-            <div className="space-y-4">
+            <div className="space-y-2">
               {availableElements.map((element) => (
                 <div
                   key={element.id}

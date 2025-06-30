@@ -62,15 +62,27 @@ export function CreateMap() {
                     {/* Dimension */}
                     <div className="flex flex-col space-y-2">
                         <label htmlFor="dimension" className="text-sm font-medium text-gray-700">
-                            Dimension
+                            Dimension (e.g., 800x600)
                         </label>
                         <input
                             id="dimension"
-                            placeholder="100x100"
+                            placeholder="800x600"
                             value={dimension}
-                            onChange={(e) => setDimension(e.target.value)}
+                            onChange={(e) => {
+                                // Only allow numbers and 'x' character
+                                const value = e.target.value.replace(/[^0-9x]/g, '');
+                                // Ensure only one 'x' in the input
+                                if ((value.match(/x/g) || []).length <= 1) {
+                                    setDimension(value);
+                                }
+                            }}
                             className="border px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                        {dimension && !dimension.includes('x') && (
+                            <p className="text-red-500 text-xs mt-1">
+                                Please include 'x' in the dimension (e.g., 800x600)
+                            </p>
+                        )}
                     </div>
                 </div>
 
