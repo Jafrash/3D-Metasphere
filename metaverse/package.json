@@ -4,12 +4,14 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "dev:all": "concurrently \"cd apps/frontend/client && npm run dev\" \"cd apps/frontend/admin && npm run dev\"",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^9.2.0",
     "prettier": "^3.2.5",
     "turbo": "^2.3.3",
     "typescript": "5.5.4",
